@@ -23,6 +23,7 @@ Minimal test harness. User types a question, AI queries the graph, generates com
 - Raised tool call limit from 5 to 15 for complex multi-hop questions
 - Added no-placeholder rule — AI must use real data or explain what it can't answer
 - **Added atomic design patterns to system prompt** — 6 locked-down micro-patterns (person lockup, stat block, section block, tag/chip, data row, bar/proportion) plus layout principles. This measurably improved visual consistency and quality.
+- **Click-to-expand drill-down** — person lockups in generated visuals are clickable. Clicking fetches direct reports via a lightweight `/api/reports` endpoint and renders them inline (no AI round-trip). Click again to collapse. Deduplicates against people already shown in the AI-generated card.
 
 ## Key Findings
 
@@ -40,6 +41,16 @@ The boundary isn't "primitives for common cases, generation for the long tail" a
 ### Tool gaps matter
 The AI generates placeholder mockups when it can't get the data it needs. The fix is better tools, not better prompting. Added `query_people` (bulk filter/aggregate) and `analyze_people` (workload metrics) to handle aggregate and multi-hop questions.
 
+### Three layers, not two
+Atomic patterns solved micro-level consistency (every person lockup looks the same). But **macro-level layout is still unpredictable** — the same org chart query produces a nested indented tree one run, and a division-head + 2-column grid + span-of-control bar chart the next. Both are good, but different every time.
+
+This reveals three distinct layers of consistency:
+1. **Atomic patterns** (solved) — person lockup, stat block, tag, bar. Micro-level rendering of data types.
+2. **Layout archetypes** (unsolved) — structural recipes for common question types. "An org chart uses nested indented rows." "A comparison uses side-by-side columns." Bigger than an atom, smaller than a full pre-built card.
+3. **Pure generation** (working) — for the long tail where no archetype fits.
+
+Layer 2 is the open question. It could be solved with prompt-level structural guidance (like we did for atomic patterns), or it could be the argument that Experiment 2's primitives earn their keep — not as full cards, but as layout archetypes.
+
 ### Dark mode needs explicit guidance
 Telling the AI "dark mode" isn't enough. It needs specific background color ranges for inner sections to maintain contrast against the card background.
 
@@ -54,6 +65,7 @@ Telling the AI "dark mode" isn't enough. It needs specific background color rang
 - Does this finding change the architecture of the combined system? (Progressive disclosure + atomic patterns + generative layouts, rather than progressive disclosure + pre-built primitives + generative fallback)
 - Would non-developer users perceive the atomic-pattern visuals as trustworthy and professional?
 - Could the atomic patterns be extracted into a shared design token system that both Experiments 2 and 3 use?
+- **Layer 2 — layout archetypes:** Should structural recipes for common question types (org chart = nested tree, comparison = side-by-side columns) be defined in the prompt, or is this where actual primitives/components earn their keep? This is the gap between atomic patterns and full pre-built cards.
 
 ## Next Steps
 

@@ -563,7 +563,7 @@ You generate every layout from scratch, but use these locked-down patterns for c
 ### Person Lockup
 Whenever you reference a person, use this pattern. Never show a name as plain text.
 \`\`\`
-<div style="display:flex;align-items:center;gap:10px">
+<div style="display:flex;align-items:center;gap:10px;cursor:pointer" data-person="{Name}">
   <img src="https://mattcmorrell.github.io/ee-graph/data/avatars/{person-id}.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover" />
   <div>
     <div style="font-size:14px;font-weight:600">{Name}</div>
@@ -641,6 +641,30 @@ Return ONLY the JSON object, no markdown fences, no other text.`;
 // --- API ---
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+
+app.get('/api/reports', (req, res) => {
+  const { name } = req.query;
+  if (!name) return res.status(400).json({ error: 'name required' });
+
+  const person = (nodesByType['person'] || []).find(n => fuzzyMatch(n.properties.name, name));
+  if (!person) return res.json({ reports: [] });
+
+  const reportEdges = (edgesByTarget[person.id] || []).filter(e => e.type === 'reports_to');
+  const reports = reportEdges.map(e => {
+    const p = nodesById[e.source];
+    if (!p || p.type !== 'person') return null;
+    const subReportCount = (edgesByTarget[p.id] || []).filter(se => se.type === 'reports_to').length;
+    return {
+      id: p.id,
+      name: p.properties.name,
+      role: p.properties.role,
+      avatarUrl: `https://mattcmorrell.github.io/ee-graph/data/avatars/${p.id}.jpg`,
+      reportCount: subReportCount
+    };
+  }).filter(Boolean).sort((a, b) => b.reportCount - a.reportCount);
+
+  res.json({ person: { id: person.id, name: person.properties.name }, reports });
+});
 
 app.get('/api/generate', async (req, res) => {
   const { question, theme } = req.query;

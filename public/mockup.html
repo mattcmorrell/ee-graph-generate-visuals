@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vision Mockup: Conversation + Whiteboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --bg-surface: #1e1e1e;
+      --bg-elevated: #262626;
+      --bg-hover: #2e2e2e;
+      --text: #e0e0e0;
+      --text-muted: #aaa;
+      --text-dim: #777;
+      --border: #2a2a2a;
+      --border-strong: #3a3a3a;
+      --accent: #5b8def;
+      --accent-dim: rgba(91, 141, 239, 0.15);
+      --accent-text: #5b8def;
+      --success: #4caf87;
+      --success-dim: rgba(76, 175, 135, 0.15);
+      --warning: #e6a855;
+      --warning-dim: rgba(230, 168, 85, 0.15);
+      --danger: #e06060;
+      --danger-dim: rgba(224, 96, 96, 0.15);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* === TOP BAR === */
+    .topbar {
+      height: 44px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    .topbar-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+
+    .topbar-status {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topbar-btn {
+      padding: 5px 10px;
+      background: none;
+      border: 1px solid var(--border-strong);
+      border-radius: 5px;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .topbar-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+    /* === MAIN LAYOUT === */
+    .layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* === CANVAS === */
+    .canvas-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 1px 1px, #222 1px, transparent 0) 0 0 / 24px 24px;
+    }
+
+    .canvas-scroll {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      padding: 40px;
+    }
+
+    .canvas-content {
+      min-width: 1200px;
+      min-height: 900px;
+      position: relative;
+    }
+
+    /* Canvas cards */
+    .canvas-card {
+      position: absolute;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+
+    .canvas-card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .canvas-card-body {
+      padding: 14px;
+    }
+
+    /* Person lockup atom */
+    .person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+    .person:hover { background: var(--bg-hover); }
+
+    .person-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .person-name { font-size: 13px; font-weight: 600; }
+    .person-role { font-size: 11px; color: var(--text-dim); }
+    .person-badge {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+
+    /* Stat atom */
+    .stat { padding: 8px 12px; }
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+    }
+    .stat-value { font-size: 22px; font-weight: 700; }
+
+    /* Section atom */
+    .section {
+      background: var(--bg-elevated);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    /* Tag atom */
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin: 2px;
+    }
+    .tag-green { background: var(--success-dim); color: var(--success); }
+    .tag-amber { background: var(--warning-dim); color: var(--warning); }
+    .tag-red { background: var(--danger-dim); color: var(--danger); }
+    .tag-blue { background: var(--accent-dim); color: var(--accent-text); }
+    .tag-neutral { background: var(--bg-hover); color: var(--text-muted); }
+
+    /* Bar atom */
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+    .bar-label { font-size: 11px; width: 70px; text-align: right; color: var(--text-dim); }
+    .bar-track { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-hover); }
+    .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+    .bar-value { font-size: 11px; font-weight: 600; width: 28px; }
+
+    /* Connection lines between canvas cards */
+    .canvas-connector {
+      position: absolute;
+      border: 1px dashed var(--border-strong);
+      pointer-events: none;
+    }
+
+    /* "AI drew something" notification */
+    .canvas-notification {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(91, 141, 239, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 20;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .canvas-notification::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Canvas zoom controls */
+    .canvas-zoom {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .canvas-zoom button {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-surface);
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .canvas-zoom button:hover { background: var(--bg-elevated); color: var(--text); }
+
+    /* === DECISION LOG SIDEBAR === */
+    .decision-log {
+      width: 280px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width 0.2s ease;
+    }
+
+    .decision-log.collapsed {
+      width: 44px;
+    }
+
+    .decision-log.collapsed .dl-content,
+    .decision-log.collapsed .dl-footer,
+    .decision-log.collapsed .dl-header-title,
+    .decision-log.collapsed .dl-header-count { display: none; }
+
+    .dl-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .dl-header-toggle {
+      width: 24px;
+      height: 24px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .dl-header-toggle:hover { color: var(--text); }
+
+    .dl-header-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .dl-header-count {
+      margin-left: auto;
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent-text);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .dl-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .dl-section {
+      margin-bottom: 14px;
+    }
+
+    .dl-section-header {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .dl-section-header:hover { color: var(--text-muted); }
+
+    .dl-section-chevron {
+      font-size: 9px;
+      transition: transform 0.15s ease;
+    }
+
+    .dl-section.collapsed .dl-section-chevron { transform: rotate(-90deg); }
+    .dl-section.collapsed .dl-items { display: none; }
+
+    .dl-item {
+      padding: 8px 10px;
+      background: var(--bg-elevated);
+      border-radius: 6px;
+      margin: 4px 0;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+
+    .dl-item:hover { background: var(--bg-hover); }
+    .dl-item-pending { border-left-color: var(--accent); }
+    .dl-item-complete { border-left-color: var(--success); opacity: 0.7; }
+
+    .dl-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .dl-item-source {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .dl-item-remove {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+    }
+    .dl-item-remove:hover { color: var(--danger); }
+
+    .dl-footer {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .dl-execute {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+
+    .dl-execute:hover { filter: brightness(1.1); }
+
+    .dl-execute-count {
+      font-weight: 400;
+      opacity: 0.8;
+      margin-left: 4px;
+    }
+
+    /* === CONVERSATION PANE === */
+    .conversation {
+      width: 360px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .convo-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .convo-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .msg {
+      max-width: 95%;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .msg-ai {
+      align-self: flex-start;
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: var(--accent-dim);
+      border: 1px solid rgba(91, 141, 239, 0.2);
+      padding: 10px 14px;
+      border-radius: 12px 12px 4px 12px;
+      color: var(--text);
+    }
+
+    .msg-ai-content {
+      background: var(--bg-elevated);
+      padding: 12px 14px;
+      border-radius: 4px 12px 12px 12px;
+    }
+
+    .msg-ai-action {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--accent-text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .msg-ai-action::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Prompt chips in conversation */
+    .msg-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .msg-chip {
+      padding: 6px 12px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .msg-chip:hover { border-color: var(--accent-text); color: var(--text); }
+
+    .msg-chip-action {
+      background: var(--accent-dim);
+      border-color: rgba(91, 141, 239, 0.3);
+      color: var(--accent-text);
+    }
+    .msg-chip-action:hover { border-color: var(--accent); }
+
+    /* Drawing indicator */
+    .msg-drawing {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding: 8px 0;
+    }
+
+    .msg-drawing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Convo input */
+    .convo-input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .convo-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .convo-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      font-family: var(--font);
+    }
+
+    .convo-input:focus { border-color: var(--accent); }
+
+    .convo-send {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .convo-send:hover { filter: brightness(1.1); }
+
+    /* === MINI MAP (top-right of canvas) === */
+    .minimap {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 140px;
+      height: 90px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 10;
+      opacity: 0.8;
+    }
+
+    .minimap-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+
+    .minimap-viewport {
+      position: absolute;
+      border: 1px solid var(--accent);
+      border-radius: 2px;
+      background: rgba(91, 141, 239, 0.08);
+    }
+
+    /* Highlight ring for "scroll to this" */
+    .canvas-card.highlight {
+      box-shadow: 0 0 0 2px var(--accent), 0 4px 24px rgba(0,0,0,0.3);
+    }
+
+    /* Nested org indent */
+    .org-indent {
+      margin-left: 18px;
+      padding-left: 14px;
+      border-left: 2px solid var(--border-strong);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="topbar-title">EE Graph</span>
+    <span class="topbar-sep"></span>
+    <span class="topbar-status">Scenario: Raj Patel Departure</span>
+    <div class="topbar-right">
+      <button class="topbar-btn" id="themeToggle">Light</button>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout">
+
+    <!-- CANVAS -->
+    <div class="canvas-area">
+      <div class="canvas-scroll" id="canvasScroll">
+        <div class="canvas-content">
+
+          <!-- Card 1: Impact Analysis -->
+          <div class="canvas-card" id="card-impact" style="left:40px;top:30px;width:420px">
+            <div class="canvas-card-header">
+              Impact Analysis
+              <span class="tag tag-red" style="font-size:10px">High Impact</span>
+            </div>
+            <div class="canvas-card-body">
+              <div style="display:flex;gap:16px;margin-bottom:14px">
+                <div class="person" style="flex:1;padding:0">
+                  <div class="person-avatar">RP</div>
+                  <div>
+                    <div class="person-name">Raj Patel</div>
+                    <div class="person-role">Engineering Lead</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px">
+                  <div class="stat">
+                    <div class="stat-label">Reports</div>
+                    <div class="stat-value">14</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-label">Projects</div>
+                    <div class="stat-value">4</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Immediate Impact</div>
+                <div style="font-size:13px;line-height:1.6;color:var(--text-muted)">
+                  14 engineers lose their manager. 4 active projects lose their tech lead.
+                  API Refactor (critical) has no other senior contributor.
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Unique Skills at Risk</div>
+                <div>
+                  <span class="tag tag-red">REST APIs (expert)</span>
+                  <span class="tag tag-amber">Go (advanced)</span>
+                  <span class="tag tag-neutral">Kubernetes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Replacement Candidates -->
+          <div class="canvas-card" id="card-candidates" style="left:500px;top:30px;width:380px">
+            <div class="canvas-card-header">
+              Replacement Candidates
+              <span style="font-size:11px;color:var(--text-dim)">3 options</span>
+            </div>
+            <div class="canvas-card-body">
+              <div class="person" style="background:var(--accent-dim);border-radius:6px;margin-bottom:6px">
+                <div class="person-avatar" style="background:var(--accent);color:#fff">LH</div>
+                <div style="flex:1">
+                  <div class="person-name">Lisa Huang <span class="tag tag-blue" style="font-size:10px;vertical-align:middle">Recommended</span></div>
+                  <div class="person-role">Infrastructure Lead</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);padding:4px 8px 12px;line-height:1.5">
+                Already manages 28. Knows the team. Needs backfill for her current role.
+              </div>
+
+              <div class="person" style="margin-bottom:6px">
+                <div class="person-avatar">DS</div>
+                <div>
+                  <div class="person-name">Derek Lin</div>
+                  <div class="person-role">Senior Engineer</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);padding:4px 8px 12px;line-height:1.5">
+                Strong technically. No management experience. High flight risk if passed over.
+              </div>
+
+              <div class="person">
+                <div class="person-avatar" style="background:var(--border-strong);color:var(--text-dim);font-size:16px">+</div>
+                <div>
+                  <div class="person-name" style="color:var(--text-muted)">External Hire</div>
+                  <div class="person-role">3-6 month timeline</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Lisa's Cascade (appeared after choosing Lisa) -->
+          <div class="canvas-card" id="card-cascade" style="left:500px;top:420px;width:380px">
+            <div class="canvas-card-header">
+              Cascade: Promote Lisa
+              <span class="tag tag-amber" style="font-size:10px">2nd-order effects</span>
+            </div>
+            <div class="canvas-card-body">
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">
+                Lisa takes Raj's 14 reports. Her 28 current reports need a new manager.
+              </div>
+
+              <div class="section">
+                <div class="section-title">Lisa's Team — Options</div>
+                <div class="person" style="margin-bottom:4px">
+                  <div class="person-avatar">VS</div>
+                  <div style="flex:1">
+                    <div class="person-name">Vera Simmons</div>
+                    <div class="person-role">Engineering Lead</div>
+                  </div>
+                  <span class="person-badge">12 reports</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-dim);padding:2px 8px 8px;line-height:1.5">
+                  Promote to absorb Lisa's team. Already manages 12 — would go to 40. Risky span.
+                </div>
+
+                <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+                  <div style="font-size:11px;color:var(--text-dim);padding:2px 8px;line-height:1.5">
+                    Or split: Vera takes senior ICs, promote Marcus Cole for junior ICs.
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Span of Control After Change</div>
+                <div class="bar-row">
+                  <span class="bar-label">Lisa</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--accent)"></div></div>
+                  <span class="bar-value">14</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-label">Vera</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--warning)"></div></div>
+                  <span class="bar-value">28</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-label">David</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--success)"></div></div>
+                  <span class="bar-value">47</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Org chart fragment (drawn by AI during conversation) -->
+          <div class="canvas-card" id="card-org" style="left:40px;top:380px;width:420px">
+            <div class="canvas-card-header">
+              Proposed Org Structure
+              <span class="tag tag-green" style="font-size:10px">After changes</span>
+            </div>
+            <div class="canvas-card-body">
+              <div class="person" style="margin-bottom:4px">
+                <div class="person-avatar" style="background:var(--accent);color:#fff">LH</div>
+                <div style="flex:1">
+                  <div class="person-name">Lisa Huang</div>
+                  <div class="person-role">Engineering Lead (promoted)</div>
+                </div>
+                <span class="person-badge">14</span>
+              </div>
+              <div class="org-indent">
+                <div class="person" style="margin:2px 0">
+                  <div class="person-avatar" style="width:24px;height:24px;font-size:10px">MT</div>
+                  <div><div class="person-name" style="font-size:12px">Mike Torres</div></div>
+                </div>
+                <div class="person" style="margin:2px 0">
+                  <div class="person-avatar" style="width:24px;height:24px;font-size:10px">DL</div>
+                  <div><div class="person-name" style="font-size:12px">Derek Lin</div></div>
+                </div>
+                <div class="person" style="margin:2px 0">
+                  <div class="person-avatar" style="width:24px;height:24px;font-size:10px">AW</div>
+                  <div><div class="person-name" style="font-size:12px">Andrew Wilson</div></div>
+                </div>
+                <div style="font-size:11px;color:var(--text-dim);padding:4px 8px">+ 11 more</div>
+              </div>
+
+              <div style="margin-top:12px">
+                <div class="person" style="margin-bottom:4px">
+                  <div class="person-avatar">VS</div>
+                  <div style="flex:1">
+                    <div class="person-name">Vera Simmons</div>
+                    <div class="person-role">Engineering Lead (absorbs Lisa's team)</div>
+                  </div>
+                  <span class="person-badge">28</span>
+                </div>
+                <div class="org-indent">
+                  <div style="font-size:11px;color:var(--text-dim);padding:4px 8px">
+                    Lisa's former 28 reports + existing 12
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Mini map -->
+      <div class="minimap">
+        <div class="minimap-dot" style="left:8px;top:10px;width:38px;height:22px"></div>
+        <div class="minimap-dot" style="left:52px;top:10px;width:34px;height:22px"></div>
+        <div class="minimap-dot" style="left:52px;top:42px;width:34px;height:28px"></div>
+        <div class="minimap-dot" style="left:8px;top:42px;width:38px;height:28px"></div>
+        <div class="minimap-viewport" style="left:2px;top:2px;width:60px;height:40px"></div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="canvas-zoom">
+        <button>-</button>
+        <button>+</button>
+      </div>
+
+      <!-- "AI drew something" notification -->
+      <div class="canvas-notification" id="canvasNotif">
+        AI drew the proposed org structure — click to view
+      </div>
+    </div>
+
+    <!-- DECISION LOG -->
+    <div class="decision-log" id="decisionLog">
+      <div class="dl-header">
+        <button class="dl-header-toggle" id="dlToggle" title="Collapse">&#9666;</button>
+        <span class="dl-header-title">Decision Log</span>
+        <span class="dl-header-count">3</span>
+      </div>
+
+      <div class="dl-content">
+        <!-- Section: People -->
+        <div class="dl-section" id="dlPeople">
+          <div class="dl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="dl-section-chevron">&#9662;</span>
+            People Changes
+          </div>
+          <div class="dl-items">
+            <div class="dl-item dl-item-pending" data-card="card-candidates">
+              <button class="dl-item-remove" title="Remove">&times;</button>
+              <div class="dl-item-title">Promote Lisa Huang</div>
+              <div class="dl-item-source">Engineering Lead, replacing Raj Patel</div>
+            </div>
+            <div class="dl-item dl-item-pending" data-card="card-cascade">
+              <button class="dl-item-remove" title="Remove">&times;</button>
+              <div class="dl-item-title">Vera Simmons absorbs Lisa's team</div>
+              <div class="dl-item-source">28 reports transfer to Vera</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Projects -->
+        <div class="dl-section" id="dlProjects">
+          <div class="dl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="dl-section-chevron">&#9662;</span>
+            Project Changes
+          </div>
+          <div class="dl-items">
+            <div class="dl-item dl-item-pending" data-card="card-impact">
+              <button class="dl-item-remove" title="Remove">&times;</button>
+              <div class="dl-item-title">Reassign API Refactor lead</div>
+              <div class="dl-item-source">Currently unassigned after Raj's departure</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Completed -->
+        <div class="dl-section">
+          <div class="dl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="dl-section-chevron">&#9662;</span>
+            Resolved
+          </div>
+          <div class="dl-items">
+            <div class="dl-item dl-item-complete">
+              <div class="dl-item-title" style="text-decoration:line-through">Choose Raj's replacement</div>
+              <div class="dl-item-source">Lisa Huang selected</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dl-footer">
+        <button class="dl-execute">
+          Execute Decisions<span class="dl-execute-count">(3 pending)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONVERSATION -->
+    <div class="conversation">
+      <div class="convo-header">Conversation</div>
+
+      <div class="convo-messages">
+        <div class="msg msg-user">What happens if Raj Patel resigns?</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Raj is an Engineering Lead with 14 direct reports and 4 active projects. His departure would have significant impact.
+          </div>
+          <div class="msg-ai-action">Drew impact analysis on canvas</div>
+          <div class="msg-chips">
+            <button class="msg-chip">Who are his reports?</button>
+            <button class="msg-chip">Which projects are at risk?</button>
+            <button class="msg-chip">Who could replace him?</button>
+          </div>
+        </div>
+
+        <div class="msg msg-user">Who could replace him?</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Three options. Lisa Huang is the strongest internal candidate — she already manages infrastructure and knows the team. Derek Lin is technically strong but has no management experience. External hire would take 3-6 months.
+          </div>
+          <div class="msg-ai-action">Drew candidate comparison on canvas</div>
+          <div class="msg-chips">
+            <button class="msg-chip msg-chip-action">Promote Lisa Huang</button>
+            <button class="msg-chip msg-chip-action">Promote Derek Lin</button>
+            <button class="msg-chip">Compare Lisa vs Derek in detail</button>
+            <button class="msg-chip">What about external?</button>
+          </div>
+        </div>
+
+        <div class="msg msg-user">Promote Lisa Huang</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Added to your Decision Log. If Lisa takes Raj's 14 reports, her current 28 need a new manager. The main options are promoting Vera Simmons to absorb them, or splitting the team.
+          </div>
+          <div class="msg-ai-action">Drew cascade effects on canvas</div>
+          <div class="msg-chips">
+            <button class="msg-chip msg-chip-action">Vera absorbs Lisa's team</button>
+            <button class="msg-chip msg-chip-action">Split: Vera + Marcus Cole</button>
+            <button class="msg-chip">Show me the span of control numbers</button>
+          </div>
+        </div>
+
+        <div class="msg msg-user">Vera absorbs Lisa's team</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Done — added to your Decision Log. That puts Vera at 40 direct reports, which is high. Here's what the proposed org looks like.
+          </div>
+          <div class="msg-ai-action">Drawing proposed org structure...</div>
+          <div class="msg-drawing">
+            <span class="msg-drawing-dot"></span>
+            Rendering on canvas...
+          </div>
+        </div>
+      </div>
+
+      <div class="convo-input-area">
+        <div class="convo-input-wrap">
+          <input class="convo-input" placeholder="Ask a question or make a decision..." />
+          <button class="convo-send">&#8593;</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Decision log collapse toggle
+    const dlToggle = document.getElementById('dlToggle');
+    const decisionLog = document.getElementById('decisionLog');
+
+    dlToggle.addEventListener('click', () => {
+      decisionLog.classList.toggle('collapsed');
+      dlToggle.textContent = decisionLog.classList.contains('collapsed') ? '\u25B8' : '\u25C2';
+    });
+
+    // Click decision item → scroll to canvas card + highlight
+    document.querySelectorAll('.dl-item[data-card]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('dl-item-remove')) return;
+        const cardId = item.dataset.card;
+        const card = document.getElementById(cardId);
+        if (!card) return;
+
+        // Remove previous highlights
+        document.querySelectorAll('.canvas-card.highlight').forEach(c => c.classList.remove('highlight'));
+
+        // Scroll to card
+        card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        card.classList.add('highlight');
+
+        setTimeout(() => card.classList.remove('highlight'), 2000);
+      });
+    });
+
+    // "AI drew something" notification click → scroll to new card
+    const notif = document.getElementById('canvasNotif');
+    notif.addEventListener('click', () => {
+      const card = document.getElementById('card-org');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        card.classList.add('highlight');
+        setTimeout(() => card.classList.remove('highlight'), 2000);
+      }
+      notif.style.display = 'none';
+    });
+
+    // Remove decision items
+    document.querySelectorAll('.dl-item-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        btn.closest('.dl-item').remove();
+      });
+    });
+  </script>
+</body>
+</html>

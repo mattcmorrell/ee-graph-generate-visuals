@@ -220,6 +220,10 @@
       color: var(--text-dim);
       font-size: 0.95rem;
     }
+
+    .result-body [data-person]:hover {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
@@ -352,6 +356,87 @@
       if (btn?.dataset.q) {
         input.value = btn.dataset.q;
         generate(btn.dataset.q);
+      }
+    });
+
+    // Click-to-expand/collapse on person lockups
+    results.addEventListener('click', async (e) => {
+      const personEl = e.target.closest('[data-person]');
+      if (!personEl) return;
+
+      const name = personEl.dataset.person;
+      const existingContainer = personEl.nextElementSibling;
+
+      // Toggle collapse if already expanded
+      if (existingContainer && existingContainer.dataset.reportsFor === name) {
+        existingContainer.remove();
+        personEl.dataset.expanded = 'false';
+        return;
+      }
+
+      if (personEl.dataset.expanded === 'true') return;
+
+      personEl.dataset.expanded = 'true';
+      personEl.style.opacity = '0.5';
+
+      try {
+        const res = await fetch(`/api/reports?name=${encodeURIComponent(name)}`);
+        const data = await res.json();
+        personEl.style.opacity = '1';
+
+        if (!data.reports || data.reports.length === 0) {
+          const noReports = document.createElement('div');
+          noReports.dataset.reportsFor = name;
+          noReports.style.cssText = 'font-size:12px;opacity:0.5;padding:6px 0 4px 46px;';
+          noReports.textContent = 'No direct reports';
+          personEl.after(noReports);
+          return;
+        }
+
+        // Collect names already visible as person lockups in the same card
+        const card = personEl.closest('.result-body');
+        const alreadyShown = new Set();
+        if (card) {
+          card.querySelectorAll('[data-person]').forEach(el => {
+            if (el !== personEl) alreadyShown.add(el.dataset.person);
+          });
+        }
+
+        const newReports = data.reports.filter(r => !alreadyShown.has(r.name));
+
+        if (newReports.length === 0) {
+          personEl.dataset.expanded = 'false';
+          return;
+        }
+
+        const isDark = getTheme() === 'dark';
+        const subBg = isDark ? '#303030' : '#f0f0f0';
+        const subtleBorder = isDark ? '#3a3a3a' : '#e0e0e0';
+
+        const container = document.createElement('div');
+        container.dataset.reportsFor = name;
+        container.style.cssText = `margin-left:20px;padding-left:16px;border-left:2px solid ${subtleBorder};margin-top:4px;margin-bottom:8px;`;
+
+        for (const r of newReports) {
+          const row = document.createElement('div');
+          row.setAttribute('data-person', r.name);
+          row.style.cssText = `display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 10px;border-radius:6px;margin:3px 0;background:${subBg};`;
+          row.innerHTML = `
+            <img src="${r.avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover" />
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${r.name}</div>
+              <div style="font-size:11px;opacity:0.6">${r.role || ''}</div>
+            </div>
+            ${r.reportCount > 0 ? `<span style="font-size:11px;opacity:0.5;padding:2px 8px;border:1px solid ${subtleBorder};border-radius:4px">${r.reportCount}</span>` : ''}
+          `;
+          container.appendChild(row);
+        }
+
+        personEl.after(container);
+      } catch (err) {
+        personEl.style.opacity = '1';
+        personEl.dataset.expanded = 'false';
+        console.error('Failed to fetch reports:', err);
       }
     });
   </script>

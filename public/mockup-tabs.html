@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vision Mockup: Tabs + Conversation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --bg-surface: #1e1e1e;
+      --bg-elevated: #262626;
+      --bg-hover: #2e2e2e;
+      --text: #e0e0e0;
+      --text-muted: #aaa;
+      --text-dim: #777;
+      --border: #2a2a2a;
+      --border-strong: #3a3a3a;
+      --accent: #5b8def;
+      --accent-dim: rgba(91, 141, 239, 0.15);
+      --accent-text: #5b8def;
+      --success: #4caf87;
+      --success-dim: rgba(76, 175, 135, 0.15);
+      --warning: #e6a855;
+      --warning-dim: rgba(230, 168, 85, 0.15);
+      --danger: #e06060;
+      --danger-dim: rgba(224, 96, 96, 0.15);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* === TOP BAR === */
+    .topbar {
+      height: 44px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    .topbar-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+
+    .topbar-status {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* === MAIN LAYOUT === */
+    .layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* === TABS AREA === */
+    .tabs-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow-x: auto;
+      padding: 0 8px;
+    }
+
+    .tab-bar::-webkit-scrollbar { height: 0; }
+
+    .tab {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .tab:hover { color: var(--text-muted); }
+
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-badge {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+    }
+
+    .tab-done {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--success-dim);
+      color: var(--success);
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-count {
+      font-size: 10px;
+      color: var(--text-dim);
+      background: var(--bg-elevated);
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Tab content */
+    .tab-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tab-panel {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      padding: 24px 32px;
+      display: none;
+    }
+
+    .tab-panel.active { display: block; }
+
+    .tab-panel-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* === VISUAL CARDS (in tab scroll) === */
+    .vis-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .vis-card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .vis-card-body { padding: 14px; }
+
+    /* Prompt chips between cards */
+    .thread-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 4px 0;
+    }
+
+    .thread-chip {
+      padding: 7px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 18px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .thread-chip:hover { border-color: var(--accent-text); color: var(--text); }
+
+    .thread-chip-action {
+      background: var(--accent-dim);
+      border-color: rgba(91, 141, 239, 0.3);
+      color: var(--accent-text);
+    }
+    .thread-chip-action:hover { border-color: var(--accent); }
+
+    .thread-chip-selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      cursor: default;
+    }
+
+    /* AI narration between cards */
+    .thread-narration {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 4px 0;
+    }
+
+    /* Thread progress */
+    .thread-progress {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    .thread-progress-bar {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .thread-progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .thread-progress-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    /* Loading state */
+    .thread-loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 0;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .thread-loading-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Shared atoms */
+    .person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+    .person:hover { background: var(--bg-hover); }
+
+    .person-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .person-name { font-size: 13px; font-weight: 600; }
+    .person-role { font-size: 11px; color: var(--text-dim); }
+    .person-badge {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+
+    .stat { padding: 8px 12px; }
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+    }
+    .stat-value { font-size: 22px; font-weight: 700; }
+
+    .section {
+      background: var(--bg-elevated);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .section:last-child { margin-bottom: 0; }
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin: 2px;
+    }
+    .tag-green { background: var(--success-dim); color: var(--success); }
+    .tag-amber { background: var(--warning-dim); color: var(--warning); }
+    .tag-red { background: var(--danger-dim); color: var(--danger); }
+    .tag-blue { background: var(--accent-dim); color: var(--accent-text); }
+    .tag-neutral { background: var(--bg-hover); color: var(--text-muted); }
+
+    .bar-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .bar-label { font-size: 11px; width: 70px; text-align: right; color: var(--text-dim); }
+    .bar-track { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-hover); }
+    .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+    .bar-value { font-size: 11px; font-weight: 600; width: 28px; }
+
+    .org-indent {
+      margin-left: 18px;
+      padding-left: 14px;
+      border-left: 2px solid var(--border-strong);
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .data-row:last-child { border-bottom: none; }
+    .data-row-label { color: var(--text-dim); }
+    .data-row-value { font-weight: 600; }
+
+    /* === DECISION LOG SIDEBAR === */
+    .decision-log {
+      width: 260px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width 0.2s ease;
+    }
+
+    .decision-log.collapsed { width: 44px; }
+    .decision-log.collapsed .dl-content,
+    .decision-log.collapsed .dl-footer,
+    .decision-log.collapsed .dl-header-title,
+    .decision-log.collapsed .dl-header-count { display: none; }
+
+    .dl-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .dl-header-toggle {
+      width: 24px;
+      height: 24px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dl-header-toggle:hover { color: var(--text); }
+
+    .dl-header-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .dl-header-count {
+      margin-left: auto;
+      font-size: 11px;
+      background: var(--accent-dim);
+      color: var(--accent-text);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .dl-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .dl-section { margin-bottom: 14px; }
+
+    .dl-section-header {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .dl-section-header:hover { color: var(--text-muted); }
+
+    .dl-section-chevron {
+      font-size: 9px;
+      transition: transform 0.15s ease;
+    }
+
+    .dl-section.collapsed .dl-section-chevron { transform: rotate(-90deg); }
+    .dl-section.collapsed .dl-items { display: none; }
+
+    .dl-item {
+      padding: 8px 10px;
+      background: var(--bg-elevated);
+      border-radius: 6px;
+      margin: 4px 0;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+    .dl-item:hover { background: var(--bg-hover); }
+    .dl-item-pending { border-left-color: var(--accent); }
+    .dl-item-complete { border-left-color: var(--success); opacity: 0.7; }
+
+    .dl-item-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .dl-item-source { font-size: 10px; color: var(--text-dim); }
+    .dl-item-tab {
+      font-size: 9px;
+      color: var(--accent-text);
+      margin-top: 3px;
+    }
+
+    .dl-item-remove {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+    }
+    .dl-item-remove:hover { color: var(--danger); }
+
+    .dl-footer {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .dl-execute {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dl-execute:hover { filter: brightness(1.1); }
+    .dl-execute-count { font-weight: 400; opacity: 0.8; margin-left: 4px; }
+
+    /* === CONVERSATION === */
+    .conversation {
+      width: 340px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .convo-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .convo-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .msg { max-width: 95%; font-size: 13px; line-height: 1.5; }
+    .msg-ai { align-self: flex-start; }
+    .msg-user {
+      align-self: flex-end;
+      background: var(--accent-dim);
+      border: 1px solid rgba(91, 141, 239, 0.2);
+      padding: 10px 14px;
+      border-radius: 12px 12px 4px 12px;
+      color: var(--text);
+    }
+
+    .msg-ai-content {
+      background: var(--bg-elevated);
+      padding: 12px 14px;
+      border-radius: 4px 12px 12px 12px;
+    }
+
+    .msg-ai-action {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--accent-text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .msg-ai-action::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .msg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+    .msg-chip {
+      padding: 6px 12px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .msg-chip:hover { border-color: var(--accent-text); color: var(--text); }
+
+    .msg-chip-action {
+      background: var(--accent-dim);
+      border-color: rgba(91, 141, 239, 0.3);
+      color: var(--accent-text);
+    }
+
+    .convo-input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .convo-input-wrap { display: flex; gap: 8px; align-items: center; }
+
+    .convo-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      font-family: var(--font);
+    }
+    .convo-input:focus { border-color: var(--accent); }
+
+    .convo-send {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .convo-send:hover { filter: brightness(1.1); }
+
+    /* Thread complete banner */
+    .thread-complete {
+      background: var(--success-dim);
+      border: 1px solid rgba(76, 175, 135, 0.2);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .thread-complete-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--success);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .thread-complete-text { font-size: 13px; color: var(--success); }
+    .thread-complete-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span class="topbar-title">EE Graph</span>
+    <span class="topbar-sep"></span>
+    <span class="topbar-status">Scenario: Raj Patel Departure</span>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout">
+
+    <!-- TABS AREA -->
+    <div class="tabs-area">
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <div class="tab active" data-tab="succession">
+          Succession Plan
+          <span class="tab-count">4 visuals</span>
+        </div>
+        <div class="tab" data-tab="projects">
+          Project Coverage
+          <span class="tab-badge"></span>
+        </div>
+        <div class="tab" data-tab="skills">
+          Skill Gaps
+          <span class="tab-done">&#10003;</span>
+        </div>
+      </div>
+
+      <!-- Tab panels -->
+      <div class="tab-content">
+
+        <!-- TAB 1: Succession Plan -->
+        <div class="tab-panel active" id="tab-succession">
+          <div class="tab-panel-inner">
+
+            <!-- Progress -->
+            <div class="thread-progress">
+              <div class="thread-progress-bar">
+                <div class="thread-progress-fill" style="width:75%"></div>
+              </div>
+              <span class="thread-progress-label">3 of 4 decisions made</span>
+            </div>
+
+            <!-- Card 1: Impact -->
+            <div class="vis-card">
+              <div class="vis-card-header">
+                Impact Analysis
+                <span class="tag tag-red" style="font-size:10px">High Impact</span>
+              </div>
+              <div class="vis-card-body">
+                <div style="display:flex;gap:16px;margin-bottom:14px">
+                  <div class="person" style="flex:1;padding:0">
+                    <div class="person-avatar">RP</div>
+                    <div>
+                      <div class="person-name">Raj Patel</div>
+                      <div class="person-role">Engineering Lead</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:12px">
+                    <div class="stat">
+                      <div class="stat-label">Reports</div>
+                      <div class="stat-value">14</div>
+                    </div>
+                    <div class="stat">
+                      <div class="stat-label">Projects</div>
+                      <div class="stat-value">4</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="section">
+                  <div class="section-title">Immediate Impact</div>
+                  <div style="font-size:13px;line-height:1.6;color:var(--text-muted)">
+                    14 engineers lose their manager. 4 active projects lose their tech lead.
+                    API Refactor (critical) has no other senior contributor.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI narration -->
+            <div class="thread-narration">
+              Three internal candidates could step up. Lisa Huang is the strongest — already manages infrastructure and knows the team.
+            </div>
+
+            <!-- Chip: user chose "Promote Lisa" -->
+            <div class="thread-chips">
+              <span class="thread-chip thread-chip-selected">Promote Lisa Huang &#10003;</span>
+              <span class="thread-chip" style="opacity:0.4;text-decoration:line-through;cursor:default">Promote Derek Lin</span>
+              <span class="thread-chip" style="opacity:0.4;text-decoration:line-through;cursor:default">External hire</span>
+            </div>
+
+            <!-- Card 2: Cascade -->
+            <div class="vis-card">
+              <div class="vis-card-header">
+                Cascade: Promote Lisa
+                <span class="tag tag-amber" style="font-size:10px">2nd-order</span>
+              </div>
+              <div class="vis-card-body">
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">
+                  Lisa takes Raj's 14 reports. Her 28 current reports need a new manager.
+                </div>
+                <div class="section">
+                  <div class="section-title">Lisa's Team — Options</div>
+                  <div class="person" style="margin-bottom:4px">
+                    <div class="person-avatar">VS</div>
+                    <div style="flex:1">
+                      <div class="person-name">Vera Simmons</div>
+                      <div class="person-role">Engineering Lead</div>
+                    </div>
+                    <span class="person-badge">12 reports</span>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-dim);padding:2px 8px 4px;line-height:1.5">
+                    Promote to absorb Lisa's team. Would go to 40 reports — high span.
+                  </div>
+                </div>
+                <div class="section">
+                  <div class="section-title">Span of Control After Change</div>
+                  <div class="bar-row">
+                    <span class="bar-label">Lisa</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:35%"></div></div>
+                    <span class="bar-value">14</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-label">Vera</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--warning)"></div></div>
+                    <span class="bar-value">40</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-label">David</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--success)"></div></div>
+                    <span class="bar-value">47</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User chose to split the team -->
+            <div class="thread-chips">
+              <span class="thread-chip" style="opacity:0.4;text-decoration:line-through;cursor:default">Vera absorbs all 28</span>
+              <span class="thread-chip thread-chip-selected">Split: Vera + Marcus &#10003;</span>
+            </div>
+
+            <!-- Card 3: Proposed org -->
+            <div class="vis-card">
+              <div class="vis-card-header">
+                Proposed Org Structure
+                <span class="tag tag-green" style="font-size:10px">After changes</span>
+              </div>
+              <div class="vis-card-body">
+                <div class="person" style="margin-bottom:4px">
+                  <div class="person-avatar" style="background:var(--accent);color:#fff">LH</div>
+                  <div style="flex:1">
+                    <div class="person-name">Lisa Huang <span class="tag tag-blue" style="font-size:10px;vertical-align:middle">Promoted</span></div>
+                    <div class="person-role">Engineering Lead</div>
+                  </div>
+                  <span class="person-badge">14</span>
+                </div>
+                <div class="org-indent" style="margin-bottom:12px">
+                  <div style="font-size:11px;color:var(--text-dim);padding:4px 0">Raj's former 14 reports</div>
+                </div>
+
+                <div class="person" style="margin-bottom:4px">
+                  <div class="person-avatar">VS</div>
+                  <div style="flex:1">
+                    <div class="person-name">Vera Simmons</div>
+                    <div class="person-role">Engineering Lead</div>
+                  </div>
+                  <span class="person-badge">24</span>
+                </div>
+                <div class="org-indent" style="margin-bottom:12px">
+                  <div style="font-size:11px;color:var(--text-dim);padding:4px 0">Existing 12 + 12 senior ICs from Lisa's team</div>
+                </div>
+
+                <div class="person" style="margin-bottom:4px">
+                  <div class="person-avatar" style="background:var(--success-dim);color:var(--success)">MC</div>
+                  <div style="flex:1">
+                    <div class="person-name">Marcus Cole <span class="tag tag-green" style="font-size:10px;vertical-align:middle">New manager</span></div>
+                    <div class="person-role">Senior Engineer &rarr; Engineering Manager</div>
+                  </div>
+                  <span class="person-badge">16</span>
+                </div>
+                <div class="org-indent">
+                  <div style="font-size:11px;color:var(--text-dim);padding:4px 0">16 junior ICs from Lisa's team</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Next decision needed -->
+            <div class="thread-narration">
+              One thing left: who takes over the API Refactor project lead? Lisa had this as her primary project. Derek Lin or Andrew Wilson are the best candidates.
+            </div>
+
+            <div class="thread-chips">
+              <button class="thread-chip thread-chip-action">Derek Lin leads API Refactor</button>
+              <button class="thread-chip thread-chip-action">Andrew Wilson leads API Refactor</button>
+              <button class="thread-chip">Compare Derek vs Andrew</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 2: Project Coverage -->
+        <div class="tab-panel" id="tab-projects">
+          <div class="tab-panel-inner">
+
+            <div class="thread-progress">
+              <div class="thread-progress-bar">
+                <div class="thread-progress-fill" style="width:25%"></div>
+              </div>
+              <span class="thread-progress-label">1 of 4 resolved</span>
+            </div>
+
+            <div class="vis-card">
+              <div class="vis-card-header">
+                Projects Affected by Raj's Departure
+              </div>
+              <div class="vis-card-body">
+                <div class="data-row">
+                  <span class="data-row-label">API Refactor</span>
+                  <span class="tag tag-red">Critical — no lead</span>
+                </div>
+                <div class="data-row">
+                  <span class="data-row-label">Observability Dashboard</span>
+                  <span class="tag tag-amber">Contributor lost</span>
+                </div>
+                <div class="data-row">
+                  <span class="data-row-label">CI/CD Pipeline</span>
+                  <span class="tag tag-amber">Contributor lost</span>
+                </div>
+                <div class="data-row">
+                  <span class="data-row-label">Deployment Tooling</span>
+                  <span class="tag tag-neutral">Low impact</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="thread-narration">
+              API Refactor is the most urgent — it's critical priority with no remaining senior contributor. The other projects have coverage but will slow down.
+            </div>
+
+            <div class="thread-loading">
+              <span class="thread-loading-dot"></span>
+              AI is analyzing contributor coverage for each project...
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 3: Skill Gaps (completed) -->
+        <div class="tab-panel" id="tab-skills">
+          <div class="tab-panel-inner">
+
+            <div class="thread-complete">
+              <div class="thread-complete-icon">&#10003;</div>
+              <div>
+                <div class="thread-complete-text">Thread complete — no action needed</div>
+                <div class="thread-complete-sub">Raj's skills have sufficient coverage across the team</div>
+              </div>
+            </div>
+
+            <div class="vis-card">
+              <div class="vis-card-header">
+                Skill Coverage After Departure
+              </div>
+              <div class="vis-card-body">
+                <div class="section">
+                  <div class="section-title">Raj's Skills vs Team Coverage</div>
+                  <div class="bar-row">
+                    <span class="bar-label">REST APIs</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--success)"></div></div>
+                    <span class="bar-value">6</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-label">Go</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:80%;background:var(--success)"></div></div>
+                    <span class="bar-value">9</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-label">Kubernetes</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--success)"></div></div>
+                    <span class="bar-value">5</span>
+                  </div>
+                  <div class="bar-row">
+                    <span class="bar-label">CI/CD</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--success)"></div></div>
+                    <span class="bar-value">8</span>
+                  </div>
+                </div>
+                <div style="font-size:12px;color:var(--text-dim);padding:8px 0 0;line-height:1.5">
+                  All of Raj's skills have 5+ other holders at advanced level or above. No critical skill gap.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DECISION LOG -->
+    <div class="decision-log" id="decisionLog">
+      <div class="dl-header">
+        <button class="dl-header-toggle" id="dlToggle" title="Collapse">&#9666;</button>
+        <span class="dl-header-title">Decision Log</span>
+        <span class="dl-header-count">3</span>
+      </div>
+
+      <div class="dl-content">
+        <div class="dl-section">
+          <div class="dl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="dl-section-chevron">&#9662;</span>
+            People Changes
+          </div>
+          <div class="dl-items">
+            <div class="dl-item dl-item-pending" data-tab="succession" data-scroll="0">
+              <button class="dl-item-remove" title="Remove">&times;</button>
+              <div class="dl-item-title">Promote Lisa Huang</div>
+              <div class="dl-item-source">Engineering Lead, replacing Raj</div>
+              <div class="dl-item-tab">Succession Plan</div>
+            </div>
+            <div class="dl-item dl-item-pending" data-tab="succession" data-scroll="1">
+              <button class="dl-item-remove" title="Remove">&times;</button>
+              <div class="dl-item-title">Split Lisa's team: Vera + Marcus</div>
+              <div class="dl-item-source">24 to Vera, 16 to Marcus (new mgr)</div>
+              <div class="dl-item-tab">Succession Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dl-section">
+          <div class="dl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="dl-section-chevron">&#9662;</span>
+            Project Changes
+          </div>
+          <div class="dl-items">
+            <div class="dl-item dl-item-pending" data-tab="projects" data-scroll="0">
+              <button class="dl-item-remove" title="Remove">&times;</button>
+              <div class="dl-item-title">Reassign API Refactor lead</div>
+              <div class="dl-item-source">Pending — Derek or Andrew</div>
+              <div class="dl-item-tab">Project Coverage</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dl-section">
+          <div class="dl-section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <span class="dl-section-chevron">&#9662;</span>
+            Resolved
+          </div>
+          <div class="dl-items">
+            <div class="dl-item dl-item-complete">
+              <div class="dl-item-title" style="text-decoration:line-through">Assess skill gaps</div>
+              <div class="dl-item-source">No action needed — sufficient coverage</div>
+              <div class="dl-item-tab">Skill Gaps</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dl-footer">
+        <button class="dl-execute">
+          Execute Decisions<span class="dl-execute-count">(3 pending)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONVERSATION -->
+    <div class="conversation">
+      <div class="convo-header">Conversation</div>
+
+      <div class="convo-messages">
+        <div class="msg msg-user">What happens if Raj Patel resigns?</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Big impact. 14 direct reports, 4 active projects, and he's the only expert-level REST API person. I see three threads to work through:
+          </div>
+          <div class="msg-chips">
+            <button class="msg-chip">Succession plan</button>
+            <button class="msg-chip">Project coverage</button>
+            <button class="msg-chip">Skill gaps</button>
+          </div>
+        </div>
+
+        <div class="msg msg-user">Let's tackle all three</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Opened three tabs. Skill gaps is the quickest — I checked and Raj's skills all have 5+ other holders. No action needed there. Let's focus on succession.
+          </div>
+          <div class="msg-ai-action">Opened 3 tabs &middot; Completed Skill Gaps</div>
+        </div>
+
+        <div class="msg msg-user">Promote Lisa for succession</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Good call. Added to your Decision Log. But Lisa's 28 reports need a new home. I've laid out the cascade in the Succession tab — Vera can absorb all 28, or we split between Vera and Marcus Cole.
+          </div>
+          <div class="msg-ai-action">Added visual to Succession Plan tab</div>
+        </div>
+
+        <div class="msg msg-user">Split it — Vera + Marcus</div>
+
+        <div class="msg msg-ai">
+          <div class="msg-ai-content">
+            Done. Vera gets 24 (her 12 + 12 senior ICs), Marcus gets 16 junior ICs and steps into management. I've drawn the proposed org in the Succession tab. One thing left on that thread: who takes the API Refactor project lead?
+          </div>
+          <div class="msg-ai-action">Updated Succession Plan tab</div>
+          <div class="msg-chips">
+            <button class="msg-chip msg-chip-action">Derek Lin</button>
+            <button class="msg-chip msg-chip-action">Andrew Wilson</button>
+            <button class="msg-chip">Compare them</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="convo-input-area">
+        <div class="convo-input-wrap">
+          <input class="convo-input" placeholder="Ask a question or make a decision..." />
+          <button class="convo-send">&#8593;</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panel = document.getElementById('tab-' + tab.dataset.tab);
+        if (panel) panel.classList.add('active');
+        // Remove badge on click
+        const badge = tab.querySelector('.tab-badge');
+        if (badge) badge.remove();
+      });
+    });
+
+    // Decision log collapse
+    const dlToggle = document.getElementById('dlToggle');
+    const decisionLog = document.getElementById('decisionLog');
+    dlToggle.addEventListener('click', () => {
+      decisionLog.classList.toggle('collapsed');
+      dlToggle.textContent = decisionLog.classList.contains('collapsed') ? '\u25B8' : '\u25C2';
+    });
+
+    // Decision log item click → switch to tab and scroll
+    document.querySelectorAll('.dl-item[data-tab]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('dl-item-remove')) return;
+        const tabName = item.dataset.tab;
+        // Switch tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        const tab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+        const panel = document.getElementById('tab-' + tabName);
+        if (tab) tab.classList.add('active');
+        if (panel) {
+          panel.classList.add('active');
+          // Scroll to the relevant card
+          const idx = parseInt(item.dataset.scroll) || 0;
+          const cards = panel.querySelectorAll('.vis-card');
+          if (cards[idx]) {
+            setTimeout(() => {
+              cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+              cards[idx].style.boxShadow = '0 0 0 2px var(--accent), 0 4px 24px rgba(0,0,0,0.3)';
+              setTimeout(() => { cards[idx].style.boxShadow = ''; }, 2000);
+            }, 100);
+          }
+        }
+      });
+    });
+
+    // Section collapse
+    document.querySelectorAll('.dl-section-header').forEach(h => {
+      h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed'));
+    });
+
+    // Remove items
+    document.querySelectorAll('.dl-item-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        btn.closest('.dl-item').remove();
+      });
+    });
+  </script>
+</body>
+</html>
