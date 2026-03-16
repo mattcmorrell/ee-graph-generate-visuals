@@ -304,6 +304,59 @@ function query_people(filters = {}, group_by = null) {
   return { totalMatched: people.length, groups: result };
 }
 
+function analyze_people(metrics) {
+  const people = (nodesByType['person'] || []).filter(n => n.properties.status === 'active');
+  const results = [];
+
+  for (const person of people) {
+    const pid = person.id;
+    const out = edgesBySource[pid] || [];
+    const inc = edgesByTarget[pid] || [];
+
+    const entry = {
+      id: pid,
+      name: person.properties.name,
+      role: person.properties.role,
+      level: person.properties.level,
+      location: person.properties.location,
+      startDate: person.properties.startDate,
+      projectCount: out.filter(e => e.type === 'works_on').length,
+      directReportCount: inc.filter(e => e.type === 'reports_to').length,
+      menteeCount: out.filter(e => e.type === 'mentors').length,
+      skillCount: out.filter(e => e.type === 'has_skill').length,
+      teamCount: out.filter(e => e.type === 'member_of').length,
+    };
+
+    // Apply filters from metrics
+    let include = true;
+    if (metrics.min_projects && entry.projectCount < metrics.min_projects) include = false;
+    if (metrics.min_direct_reports && entry.directReportCount < metrics.min_direct_reports) include = false;
+    if (metrics.min_mentees && entry.menteeCount < metrics.min_mentees) include = false;
+    if (metrics.min_skills && entry.skillCount < metrics.min_skills) include = false;
+
+    if (include) {
+      // Add project details
+      entry.projects = out.filter(e => e.type === 'works_on').map(e => {
+        const proj = nodesById[e.target];
+        return proj ? { name: proj.properties.name || proj.properties.title, priority: proj.properties.priority, role: (e.metadata || {}).role } : null;
+      }).filter(Boolean);
+
+      // Add mentee names
+      entry.mentees = out.filter(e => e.type === 'mentors').map(e => {
+        const m = nodesById[e.target];
+        return m ? m.properties.name : null;
+      }).filter(Boolean);
+
+      results.push(entry);
+    }
+  }
+
+  // Sort by total burden (projects + reports + mentees)
+  results.sort((a, b) => (b.projectCount + b.directReportCount + b.menteeCount) - (a.projectCount + a.directReportCount + a.menteeCount));
+
+  return { count: results.length, people: results.slice(0, 20) };
+}
+
 function get_graph_schema() {
   const nodeTypes = {};
   for (const [type, list] of Object.entries(nodesByType)) {
@@ -407,6 +460,22 @@ const toolDefs = [
   {
     type: 'function',
     function: {
+      name: 'analyze_people',
+      description: 'Find people matching workload criteria. Computes per-person counts of projects, direct reports, mentees, skills, and teams across all active employees. Filter by minimums to find overloaded, under-connected, or otherwise notable people. Returns up to 20, sorted by total burden.',
+      parameters: {
+        type: 'object',
+        properties: {
+          min_projects: { type: 'number', description: 'Minimum project count' },
+          min_direct_reports: { type: 'number', description: 'Minimum direct report count' },
+          min_mentees: { type: 'number', description: 'Minimum mentee count' },
+          min_skills: { type: 'number', description: 'Minimum skill count' }
+        }
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'query_people',
       description: 'Filter and optionally group all people. Use for aggregate/comparison questions (e.g. tenure by location, headcount by level). Returns up to 50 people ungrouped, or grouped aggregates with counts and date ranges.',
       parameters: {
@@ -452,6 +521,7 @@ const toolFns = {
   get_team_full: (args) => get_team_full(args.team_id),
   get_direct_reports: (args) => get_direct_reports(args.person_id, args.recursive),
   search_nodes: (args) => search_nodes(args.query, args.node_type),
+  analyze_people: (args) => analyze_people(args),
   query_people: (args) => query_people(args.filters, args.group_by),
   get_impact_radius: (args) => get_impact_radius(args.person_id)
 };
@@ -527,7 +597,7 @@ app.get('/api/generate', async (req, res) => {
 
     // Tool loop — let the AI query the graph, then generate the visual
     let toolCalls = 0;
-    const MAX_TOOL_CALLS = 5;
+    const MAX_TOOL_CALLS = 15;
 
     while (toolCalls < MAX_TOOL_CALLS) {
       const response = await openai.chat.completions.create({
