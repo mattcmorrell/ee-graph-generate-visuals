@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiment 3: Generative Visuals</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 24px 32px 16px;
+      background: #222;
+      border-bottom: 1px solid #333;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #aaa;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .input-area {
+      padding: 16px 32px;
+      background: #222;
+      border-bottom: 1px solid #333;
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      background: #2a2a2a;
+      color: #e0e0e0;
+    }
+
+    .input-area input:focus {
+      border-color: #888;
+    }
+
+    .input-area button {
+      padding: 10px 20px;
+      background: #e0e0e0;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .input-area button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .suggestions {
+      padding: 12px 32px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .suggestion {
+      padding: 6px 12px;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .suggestion:hover {
+      border-color: #666;
+      color: #ccc;
+    }
+
+    .results {
+      flex: 1;
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 700px;
+    }
+
+    .result-card {
+      background: #242424;
+      border: 1px solid #333;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .result-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #2e2e2e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .result-reasoning {
+      font-size: 0.75rem;
+      color: #999;
+      font-style: italic;
+    }
+
+    .result-body {
+      padding: 16px;
+    }
+
+    .result-question {
+      font-size: 0.8rem;
+      color: #999;
+      padding: 8px 16px;
+      background: #1e1e1e;
+      border-bottom: 1px solid #2e2e2e;
+    }
+
+    .status {
+      padding: 16px 32px;
+      font-size: 0.85rem;
+      color: #999;
+      display: none;
+    }
+
+    .status.visible {
+      display: block;
+    }
+
+    .empty {
+      padding: 64px 32px;
+      text-align: center;
+      color: #777;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Experiment 3: Generative Visuals</h1>
+    <p>Can the AI generate a usable visual from scratch, with no component library?</p>
+  </header>
+
+  <div class="input-area">
+    <input type="text" id="question" placeholder="Ask a question about the organization..." />
+    <button id="go">Generate</button>
+  </div>
+
+  <div class="suggestions">
+    <button class="suggestion" data-q="Tell me about Raj Patel">Tell me about Raj Patel</button>
+    <button class="suggestion" data-q="What happens if Raj Patel resigns?">What if Raj Patel resigns?</button>
+    <button class="suggestion" data-q="Show me the Platform team">Platform team</button>
+    <button class="suggestion" data-q="Who has the most direct reports?">Most direct reports</button>
+    <button class="suggestion" data-q="Compare the Engineering and Sales departments by headcount and tenure">Engineering vs Sales</button>
+    <button class="suggestion" data-q="Which skills are only held by one or two people?">Rare skills</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="results" id="results">
+    <div class="empty" id="empty">Ask a question and the AI will generate a visual from scratch.</div>
+  </div>
+
+  <script>
+    const input = document.getElementById('question');
+    const goBtn = document.getElementById('go');
+    const status = document.getElementById('status');
+    const results = document.getElementById('results');
+    const empty = document.getElementById('empty');
+
+    let generating = false;
+
+    function showStatus(msg) {
+      status.textContent = msg;
+      status.classList.add('visible');
+    }
+
+    function hideStatus() {
+      status.classList.remove('visible');
+    }
+
+    async function generate(question) {
+      if (generating || !question.trim()) return;
+      generating = true;
+      goBtn.disabled = true;
+      empty.style.display = 'none';
+
+      const eventSource = new EventSource(`/api/generate?question=${encodeURIComponent(question)}`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === 'status') {
+            showStatus(data.message);
+          } else if (data.type === 'result') {
+            hideStatus();
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.innerHTML = `
+              <div class="result-question">${question}</div>
+              <div class="result-header">
+                <span class="result-title">${data.title || 'Generated Visual'}</span>
+                <span class="result-reasoning">${data.reasoning || ''}</span>
+              </div>
+              <div class="result-body">${data.html}</div>
+            `;
+            results.prepend(card);
+          } else if (data.type === 'error') {
+            hideStatus();
+            showStatus('Error: ' + data.message);
+          } else if (data.type === 'done') {
+            eventSource.close();
+            generating = false;
+            goBtn.disabled = false;
+            hideStatus();
+          }
+        } catch (e) {
+          console.error('Parse error:', e);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        generating = false;
+        goBtn.disabled = false;
+        hideStatus();
+        showStatus('Connection lost. Try again.');
+      };
+    }
+
+    goBtn.addEventListener('click', () => generate(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') generate(input.value);
+    });
+
+    document.querySelector('.suggestions').addEventListener('click', (e) => {
+      const btn = e.target.closest('.suggestion');
+      if (btn?.dataset.q) {
+        input.value = btn.dataset.q;
+        generate(btn.dataset.q);
+      }
+    });
+  </script>
+</body>
+</html>
