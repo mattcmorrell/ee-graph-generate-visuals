@@ -417,7 +417,7 @@ The user asks a question about their organization. You:
 ## Design Constraints
 
 - The visual will be rendered inside a container that is max 600px wide.
-- Use a neutral, professional style. Dark text on light backgrounds.
+- Use a neutral, professional style. Match the specified color scheme (light or dark mode).
 - Font stack: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
 - Keep it readable: minimum 13px font size for body text, 11px for labels.
 - The visual should communicate the answer at a glance — a busy HR admin should understand it in 5 seconds.
@@ -438,8 +438,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.get('/api/generate', async (req, res) => {
-  const { question } = req.query;
+  const { question, theme } = req.query;
   if (!question) return res.status(400).json({ error: 'question required' });
+  const isDark = theme === 'dark';
+  const colorScheme = isDark
+    ? 'Dark mode: use light text (#e0e0e0) on dark backgrounds (#1e1e1e to #2a2a2a). Avoid white or bright backgrounds.'
+    : 'Light mode: use dark text (#1a1a1a) on light/white backgrounds. Avoid dark or black backgrounds.';
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -453,7 +457,7 @@ app.get('/api/generate', async (req, res) => {
     send({ type: 'status', message: 'Querying graph...' });
 
     const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT + `\n\n## Color Scheme\n${colorScheme}` },
       { role: 'user', content: question }
     ];
 

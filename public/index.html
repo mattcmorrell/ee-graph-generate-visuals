@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +7,52 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    [data-theme="light"] {
+      --bg: #f5f5f5;
+      --bg-surface: #fff;
+      --bg-inset: #fafafa;
+      --text: #1a1a1a;
+      --text-muted: #666;
+      --text-dim: #999;
+      --border: #e0e0e0;
+      --border-subtle: #f0f0f0;
+      --input-bg: #fff;
+      --input-border: #d0d0d0;
+      --input-focus: #666;
+      --btn-bg: #1a1a1a;
+      --btn-text: #fff;
+      --chip-bg: #fff;
+      --chip-border: #e0e0e0;
+      --chip-text: #666;
+      --chip-hover-border: #999;
+      --chip-hover-text: #333;
+    }
+
+    [data-theme="dark"] {
+      --bg: #1a1a1a;
+      --bg-surface: #242424;
+      --bg-inset: #1e1e1e;
+      --text: #e0e0e0;
+      --text-muted: #aaa;
+      --text-dim: #999;
+      --border: #333;
+      --border-subtle: #2e2e2e;
+      --input-bg: #2a2a2a;
+      --input-border: #444;
+      --input-focus: #888;
+      --btn-bg: #e0e0e0;
+      --btn-text: #1a1a1a;
+      --chip-bg: #2a2a2a;
+      --chip-border: #3a3a3a;
+      --chip-text: #aaa;
+      --chip-hover-border: #666;
+      --chip-hover-text: #ccc;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #1a1a1a;
-      color: #e0e0e0;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -18,27 +60,46 @@
 
     header {
       padding: 24px 32px 16px;
-      background: #222;
-      border-bottom: 1px solid #333;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
     }
 
     header h1 {
       font-size: 1.1rem;
       font-weight: 600;
-      color: #aaa;
+      color: var(--text-muted);
       letter-spacing: 0.02em;
     }
 
     header p {
       font-size: 0.85rem;
-      color: #999;
+      color: var(--text-dim);
       margin-top: 4px;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--text-dim);
+      color: var(--text);
     }
 
     .input-area {
       padding: 16px 32px;
-      background: #222;
-      border-bottom: 1px solid #333;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
       display: flex;
       gap: 8px;
     }
@@ -46,22 +107,22 @@
     .input-area input {
       flex: 1;
       padding: 10px 14px;
-      border: 1px solid #444;
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       font-size: 0.95rem;
       outline: none;
-      background: #2a2a2a;
-      color: #e0e0e0;
+      background: var(--input-bg);
+      color: var(--text);
     }
 
     .input-area input:focus {
-      border-color: #888;
+      border-color: var(--input-focus);
     }
 
     .input-area button {
       padding: 10px 20px;
-      background: #e0e0e0;
-      color: #1a1a1a;
+      background: var(--btn-bg);
+      color: var(--btn-text);
       border: none;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -82,17 +143,17 @@
 
     .suggestion {
       padding: 6px 12px;
-      background: #2a2a2a;
-      border: 1px solid #3a3a3a;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
       border-radius: 16px;
       font-size: 0.8rem;
-      color: #aaa;
+      color: var(--chip-text);
       cursor: pointer;
     }
 
     .suggestion:hover {
-      border-color: #666;
-      color: #ccc;
+      border-color: var(--chip-hover-border);
+      color: var(--chip-hover-text);
     }
 
     .results {
@@ -105,15 +166,15 @@
     }
 
     .result-card {
-      background: #242424;
-      border: 1px solid #333;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
     }
 
     .result-header {
       padding: 12px 16px;
-      border-bottom: 1px solid #2e2e2e;
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -126,7 +187,7 @@
 
     .result-reasoning {
       font-size: 0.75rem;
-      color: #999;
+      color: var(--text-dim);
       font-style: italic;
     }
 
@@ -136,16 +197,16 @@
 
     .result-question {
       font-size: 0.8rem;
-      color: #999;
+      color: var(--text-dim);
       padding: 8px 16px;
-      background: #1e1e1e;
-      border-bottom: 1px solid #2e2e2e;
+      background: var(--bg-inset);
+      border-bottom: 1px solid var(--border-subtle);
     }
 
     .status {
       padding: 16px 32px;
       font-size: 0.85rem;
-      color: #999;
+      color: var(--text-dim);
       display: none;
     }
 
@@ -156,15 +217,18 @@
     .empty {
       padding: 64px 32px;
       text-align: center;
-      color: #777;
+      color: var(--text-dim);
       font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Experiment 3: Generative Visuals</h1>
-    <p>Can the AI generate a usable visual from scratch, with no component library?</p>
+    <div>
+      <h1>Experiment 3: Generative Visuals</h1>
+      <p>Can the AI generate a usable visual from scratch, with no component library?</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle">Light mode</button>
   </header>
 
   <div class="input-area">
@@ -193,6 +257,28 @@
     const status = document.getElementById('status');
     const results = document.getElementById('results');
     const empty = document.getElementById('empty');
+    const themeToggle = document.getElementById('themeToggle');
+
+    // Theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateToggleLabel();
+
+    function updateToggleLabel() {
+      const current = document.documentElement.getAttribute('data-theme');
+      themeToggle.textContent = current === 'dark' ? 'Light mode' : 'Dark mode';
+    }
+
+    function getTheme() {
+      return document.documentElement.getAttribute('data-theme');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const next = getTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateToggleLabel();
+    });
 
     let generating = false;
 
@@ -211,7 +297,8 @@
       goBtn.disabled = true;
       empty.style.display = 'none';
 
-      const eventSource = new EventSource(`/api/generate?question=${encodeURIComponent(question)}`);
+      const theme = getTheme();
+      const eventSource = new EventSource(`/api/generate?question=${encodeURIComponent(question)}&theme=${theme}`);
 
       eventSource.onmessage = (event) => {
         try {
