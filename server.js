@@ -269,6 +269,41 @@ function get_impact_radius(person_id) {
   };
 }
 
+function query_people(filters = {}, group_by = null) {
+  let people = (nodesByType['person'] || []).map(n => ({ id: n.id, ...n.properties }));
+
+  // Apply filters
+  if (filters.location) people = people.filter(p => fuzzyMatch(p.location || '', filters.location));
+  if (filters.status) people = people.filter(p => p.status === filters.status);
+  if (filters.level) people = people.filter(p => p.level === filters.level);
+  if (filters.role) people = people.filter(p => fuzzyMatch(p.role || '', filters.role));
+  if (filters.department) people = people.filter(p => fuzzyMatch(p.department || '', filters.department));
+
+  if (!group_by) {
+    return { count: people.length, people: people.slice(0, 50).map(p => ({ id: p.id, name: p.name, role: p.role, level: p.level, location: p.location, status: p.status, startDate: p.startDate })) };
+  }
+
+  // Group and aggregate
+  const groups = {};
+  for (const p of people) {
+    const key = p[group_by] || 'Unknown';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  }
+
+  const result = {};
+  for (const [key, members] of Object.entries(groups)) {
+    const startDates = members.map(m => m.startDate).filter(Boolean).sort();
+    result[key] = {
+      count: members.length,
+      oldestHire: startDates[0] || null,
+      newestHire: startDates[startDates.length - 1] || null,
+      people: members.slice(0, 10).map(p => ({ id: p.id, name: p.name, role: p.role, startDate: p.startDate }))
+    };
+  }
+  return { totalMatched: people.length, groups: result };
+}
+
 function get_graph_schema() {
   const nodeTypes = {};
   for (const [type, list] of Object.entries(nodesByType)) {
@@ -372,6 +407,33 @@ const toolDefs = [
   {
     type: 'function',
     function: {
+      name: 'query_people',
+      description: 'Filter and optionally group all people. Use for aggregate/comparison questions (e.g. tenure by location, headcount by level). Returns up to 50 people ungrouped, or grouped aggregates with counts and date ranges.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filters: {
+            type: 'object',
+            description: 'Optional filters: location, status, level, role, department (all fuzzy-matched)',
+            properties: {
+              location: { type: 'string' },
+              status: { type: 'string' },
+              level: { type: 'string' },
+              role: { type: 'string' },
+              department: { type: 'string' }
+            }
+          },
+          group_by: {
+            type: 'string',
+            description: 'Property to group results by, e.g. "location", "level", "status", "department"'
+          }
+        }
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'get_impact_radius',
       description: 'Multi-hop impact analysis for a person: reports, mentees, projects, skills, teams.',
       parameters: {
@@ -390,6 +452,7 @@ const toolFns = {
   get_team_full: (args) => get_team_full(args.team_id),
   get_direct_reports: (args) => get_direct_reports(args.person_id, args.recursive),
   search_nodes: (args) => search_nodes(args.query, args.node_type),
+  query_people: (args) => query_people(args.filters, args.group_by),
   get_impact_radius: (args) => get_impact_radius(args.person_id)
 };
 
@@ -412,6 +475,7 @@ The user asks a question about their organization. You:
 - You must generate the complete HTML and inline CSS for every visual from scratch.
 - Every visual is a self-contained block of HTML that will be inserted into a page.
 - Use real data from the graph tools. Never fabricate names, numbers, or relationships.
+- NEVER generate placeholder or mockup visuals. If you can't get the data, say so in the "reasoning" field and show what you CAN answer with the data you have.
 - Avatar images are available at: https://mattcmorrell.github.io/ee-graph/data/avatars/{person-id}.jpg
 
 ## Design Constraints
@@ -442,8 +506,8 @@ app.get('/api/generate', async (req, res) => {
   if (!question) return res.status(400).json({ error: 'question required' });
   const isDark = theme === 'dark';
   const colorScheme = isDark
-    ? 'Dark mode: use light text (#e0e0e0) on dark backgrounds (#1e1e1e to #2a2a2a). Avoid white or bright backgrounds.'
-    : 'Light mode: use dark text (#1a1a1a) on light/white backgrounds. Avoid dark or black backgrounds.';
+    ? 'Dark mode: use light text (#e0e0e0). The outer card background is #242424. For inner sections/sub-cards, use #303030 to #383838 so they stand out clearly from the card. Never use backgrounds below #2c2c2c for inner sections — they blend in. Avoid white or bright backgrounds.'
+    : 'Light mode: use dark text (#1a1a1a). The outer card background is white (#fff). For inner sections/sub-cards, use #f0f0f0 to #e8e8e8 so they stand out. Avoid dark or black backgrounds.';
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
